@@ -31,6 +31,31 @@ const getStylists = async (req, res) => {
   }
 };
 
+// returns selected Stylist's information
+const getStylist = async (req, res) => {
+  console.log("getStylist", req.params.stylistId);
+  const client = new MongoClient(MONGO_URI, options);
+  try {
+    await client.connect();
+    const db = client.db("booking-site");
+    const stylistId = req.params.stylistId;
+    console.log(stylistId);
+    const StylistInfo = await db
+      .collection("stylists")
+      .findOne({ _id: stylistId });
+    if (StylistInfo) {
+      res.status(200).json({ status: 200, data: StylistInfo });
+    } else {
+      res.status(404).json({ status: 404, message: "Stylist not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  } finally {
+    client.close();
+  }
+};
+
 module.exports = {
   getStylists,
+  getStylist,
 };

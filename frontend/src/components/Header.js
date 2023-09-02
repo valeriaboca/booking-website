@@ -14,6 +14,7 @@ const Header = () => {
 
 const H1 = styled.h1`
   color: black;
+  text-align: center;
 `;
 
 const Home = styled.p`

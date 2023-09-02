@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 const MainPage = () => {
-  const [stylist, setStylist] = useState([]);
+  const [stylists, setStylists] = useState([]);
 
   useEffect(() => {
     fetch(`/get-stylists`)
@@ -11,7 +11,7 @@ const MainPage = () => {
       .then((data) => {
         if (data.status === 200 && data.data) {
           const stylists = data.data;
-          setStylist(stylists);
+          setStylists(stylists);
           console.log(stylists);
         }
       })
@@ -20,18 +20,18 @@ const MainPage = () => {
 
   return (
     <Wrapper>
-      {stylist &&
-        stylist.length > 0 &&
-        stylist.map((stylist) => {
+      {stylists &&
+        stylists.length > 0 &&
+        stylists.map((stylist) => {
           return (
             <Container key={stylist._id}>
               <Img
-                src="https://cdn.shopifycdn.net/s/files/1/0473/5103/8114/files/13_480x480.jpg?v=1653641368"
-                alt={`${stylist}`}
+                src={`images/${stylist.imageName}.jpg`}
+                alt={`${stylist.name}`}
               />
               {stylist.name}
               {stylist.price}
-              <LinkToStylist to="/stylist">Book Session</LinkToStylist>
+              <LinkToStylist to="/stylist" state={{ stylistId: `${stylist._id}` }}>Book Session</LinkToStylist>
             </Container>
           );
         })}

@@ -1,18 +1,51 @@
-import { Link } from "react-router-dom";
-// import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import ClientForm from "./ClientForm";
 
-const Stylists = ({ stylist_id }) => {
+const Stylists = () => {
+  const location = useLocation();
+  const { stylistId } = location.state;
+  const [stylistInfo, getStylistInfo] = useState({});
+  useEffect(() => {
+    if (stylistId) {
+      fetch(`/get-stylist/${stylistId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === 200 && data.data) {
+            const stylistInfo = data.data;
+            getStylistInfo(stylistInfo);
+            console.log(stylistInfo);
+          }
+        })
+        .catch((error) => console.error("Error fetching stylistInfo:", error));
+    }
+  }, []);
   return (
-    <div>
-      Jennifer
-      <img
-        src="https://cdn.shopifycdn.net/s/files/1/0473/5103/8114/files/13_480x480.jpg?v=1653641368"
-        alt="eyelash styles"
-      />
-      more info
-      <Link to="/booking">Book now</Link>
-    </div>
+    <>
+      {stylistInfo && (
+        <div>
+          <div>
+            <Img
+              src={`images/${stylistInfo.imageName}.jpg`}
+              alt={`${stylistInfo.name}`}
+            />
+            {stylistInfo.name}
+            {stylistInfo.price}
+            <Link to="/booking">Book now</Link>
+          </div>
+          <ClientForm />
+        </div>
+      )}
+    </>
   );
 };
+
+const Img = styled.img`
+  width: 293px;
+  height: 293px;
+  object-fit: cover;
+  object-position: 50% 50%;
+`;
 
 export default Stylists;

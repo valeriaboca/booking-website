@@ -4,7 +4,7 @@
 const express = require("express");
 const morgan = require("morgan");
 
-const { getStylists } = require("./handlers");
+const { getStylists, getStylist } = require("./handlers");
 
 express()
   .use(morgan("tiny"))
@@ -13,6 +13,9 @@ express()
 
   // get all stylists
   .get("/get-stylists", getStylists)
+
+  //get selected stylist
+  .get("/get-stylist/:stylistId", getStylist)
 
   //catch-all endpoint
   .get("*", (req, res) => {
