@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 
-const ClientForm = () => {
+const ClientForm = ({ handleSubmit }) => {
   const [formData, setFormData] = useState({});
 
   const handleChange = (key, value) => {
@@ -13,37 +13,37 @@ const ClientForm = () => {
 
   return (
     <Div>
-      <Wrapper>
+      <StyledForm onSubmit={(e) => handleSubmit(e, formData)}>
         <Input
           type="text"
-          placeholder="First Name"
+          placeholder="First Name*"
           name="firstName"
           required
-          handleChange={handleChange}
+          onChange={(e) => handleChange("firstName", e.target.value)}
         />
         <Input
           type="text"
-          placeholder="Last Name"
+          placeholder="Last Name*"
           name="lastName"
           required
-          handleChange={handleChange}
+          onChange={(e) => handleChange("lastName", e.target.value)}
         />
         <Input
           type="tel"
-          placeholder="Phone Number"
+          placeholder="Phone Number*"
           name="phoneNumber"
           required
-          handleChange={handleChange}
+          onChange={(e) => handleChange("phoneNumber", e.target.value)}
         />
         <Input
           type="email"
-          placeholder="Email"
+          placeholder="Email*"
           name="email"
           required
-          handleChange={handleChange}
+          onChange={(e) => handleChange("email", e.target.value)}
         />
         <Submit type="submit">Book Now</Submit>
-      </Wrapper>
+      </StyledForm>
     </Div>
   );
 };
@@ -65,7 +65,7 @@ const Submit = styled.button`
   border-radius: 2px;
 `;
 
-const Wrapper = styled.div`
+const StyledForm = styled.form`
   margin-top: 24px;
   padding: 30px;
   display: flex;

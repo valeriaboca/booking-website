@@ -4,7 +4,7 @@
 const express = require("express");
 const morgan = require("morgan");
 
-const { getStylists, getStylist } = require("./handlers");
+const { getStylists, getStylist, addBooking } = require("./handlers");
 
 express()
   .use(morgan("tiny"))
@@ -17,7 +17,9 @@ express()
   //get selected stylist
   .get("/get-stylist/:stylistId", getStylist)
 
-  //catch-all endpoint
+  .post("/add-booking", addBooking)
+
+  //catch for all endpoints
   .get("*", (req, res) => {
     res.status(404).json({
       status: 404,

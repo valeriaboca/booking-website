@@ -4,6 +4,8 @@
 const { MongoClient } = require("mongodb");
 require("dotenv").config();
 const { MONGO_URI } = process.env;
+// use this package to generate unique ids: https://www.npmjs.com/package/uuid
+const { v4: uuidv4 } = require("uuid");
 
 const options = {
   useNewUrlParser: true,
@@ -34,12 +36,14 @@ const getStylists = async (req, res) => {
 // returns selected Stylist's information
 const getStylist = async (req, res) => {
   console.log("getStylist", req.params.stylistId);
+
   const client = new MongoClient(MONGO_URI, options);
   try {
     await client.connect();
     const db = client.db("booking-site");
     const stylistId = req.params.stylistId;
     console.log(stylistId);
+
     const StylistInfo = await db
       .collection("stylists")
       .findOne({ _id: stylistId });
@@ -55,7 +59,49 @@ const getStylist = async (req, res) => {
   }
 };
 
+// add a new booking
+const addBooking = async (req, res) => {
+  const client = new MongoClient(MONGO_URI, options);
+  const { stylistId, date, timeSlot, firstName, lastName, phoneNumber, email } =
+    req.body;
+  const noMissingData = stylistId && date && timeSlot ? true : false;
+
+  try {
+    await client.connect();
+    const db = client.db("booking-site");
+
+    if (noMissingData) {
+      const bookingId = uuidv4();
+      const newBooking = {
+        _id: bookingId,
+        stylistId: stylistId,
+        date: date,
+        timeSlot,
+        clientDetails: {
+          firstName,
+          lastName,
+          phoneNumber,
+          email,
+        },
+      };
+
+      await db.collection("bookings").insertOne(newBooking);
+
+      res
+        .status(201)
+        .json({ status: 201, data: newBooking, message: bookingId });
+    } else {
+      throw new Error("missing data");
+    }
+  } catch (err) {
+    res.status(400).json({ status: 400, message: err.message });
+  } finally {
+    client.close();
+  }
+};
+
 module.exports = {
   getStylists,
   getStylist,
+  addBooking,
 };

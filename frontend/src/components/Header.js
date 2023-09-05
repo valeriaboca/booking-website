@@ -22,8 +22,9 @@ const Home = styled.p`
   margin: 3px;
 `;
 
-const Wrapper = styled.div`
-  padding: 18px;
+const Wrapper = styled.div`	
+padding: 10px;	
+background-color: aliceblue;	
 `;
 
 export default Header;
