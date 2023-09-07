@@ -19,12 +19,7 @@ const getStylists = async (req, res) => {
     await client.connect();
     const db = client.db("booking-site");
     const stylists = db.collection("stylists");
-
     const stylistsArray = await stylists.find({}).toArray();
-    console.log(stylistsArray);
-    // const stylistsNames = stylistsArray.map((stylists) => stylists.name);
-    // const stylistsSet = Array.from(new Set(stylistsNames));
-
     res.status(200).json({ status: 200, data: stylistsArray });
   } catch (error) {
     res.status(500).json({ status: 500, message: error.message });
@@ -33,25 +28,63 @@ const getStylists = async (req, res) => {
   }
 };
 
-// returns selected Stylist's information
+// returns selected stylist's information
 const getStylist = async (req, res) => {
-  console.log("getStylist", req.params.stylistId);
-
   const client = new MongoClient(MONGO_URI, options);
   try {
     await client.connect();
     const db = client.db("booking-site");
     const stylistId = req.params.stylistId;
-    console.log(stylistId);
-
-    const StylistInfo = await db
+    const stylistInfo = await db
       .collection("stylists")
       .findOne({ _id: stylistId });
-    if (StylistInfo) {
-      res.status(200).json({ status: 200, data: StylistInfo });
+    if (stylistInfo) {
+      res.status(200).json({ status: 200, data: stylistInfo });
     } else {
-      res.status(404).json({ status: 404, message: "Stylist not found" });
+      res.status(404).json({ status: 404, message: "stylist not found" });
     }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  } finally {
+    client.close();
+  }
+};
+
+// returns selected stylist's bookings for a particular date
+const getBookings = async (req, res) => {
+  const client = new MongoClient(MONGO_URI, options);
+  try {
+    await client.connect();
+    const db = client.db("booking-site");
+    const stylistId = req.params.stylistId;
+    const date = req.params.date;
+    const bookings = await db
+      .collection("bookings")
+      .find({ stylistId: stylistId, date: date })
+      .toArray();
+
+    if (bookings) {
+      res.status(200).json({ status: 200, data: bookings });
+    } else {
+      res.status(404).json({ status: 404, message: "No bookings found" });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  } finally {
+    client.close();
+  }
+};
+
+// get FAQ's
+const getFaq = async (req, res) => {
+  const client = new MongoClient(MONGO_URI, options);
+  try {
+    await client.connect();
+    const db = client.db("booking-site");
+    const faq = db.collection("faq");
+    const faqArray = await faq.find({}).toArray();
+
+    res.status(200).json({ status: 200, data: faqArray });
   } catch (error) {
     res.status(500).json({ status: 500, message: error.message });
   } finally {
@@ -62,9 +95,27 @@ const getStylist = async (req, res) => {
 // add a new booking
 const addBooking = async (req, res) => {
   const client = new MongoClient(MONGO_URI, options);
-  const { stylistId, date, timeSlot, firstName, lastName, phoneNumber, email } =
-    req.body;
-  const noMissingData = stylistId && date && timeSlot ? true : false;
+  const {
+    stylistId,
+    date,
+    timeSlot,
+    firstName,
+    lastName,
+    phoneNumber,
+    email,
+    total,
+  } = req.body;
+  const noMissingData =
+    stylistId &&
+    date &&
+    timeSlot &&
+    firstName &&
+    lastName &&
+    phoneNumber &&
+    email &&
+    total
+      ? true
+      : false;
 
   try {
     await client.connect();
@@ -82,6 +133,7 @@ const addBooking = async (req, res) => {
           lastName,
           phoneNumber,
           email,
+          total,
         },
       };
 
@@ -100,8 +152,95 @@ const addBooking = async (req, res) => {
   }
 };
 
+// get promocodes
+const getPromocode = async (req, res) => {
+  const client = new MongoClient(MONGO_URI, options);
+  try {
+    await client.connect();
+    const db = client.db("booking-site");
+    const promoCode = db.collection("promocode");
+
+    const { code } = req.params;
+    const discountObj = await promoCode.findOne({ code });
+
+    if (discountObj) {
+      res
+        .status(200)
+        .json({ status: 200, data: { discount: discountObj.discount } });
+    } else {
+      res.status(404).json({ status: 404, message: "Invalid promocode" });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 500, message: error.message });
+  } finally {
+    client.close();
+  }
+};
+
+// updates the selected booking
+const updateBooking = async (req, res) => {
+  const client = new MongoClient(MONGO_URI, options);
+  const { _id, date, time } = req.body;
+
+  try {
+    await client.connect();
+    const db = client.db("booking-site");
+    const targetBooking = await db.collection("bookings").updateOne(
+      { _id: _id },
+      {
+        $set: {
+          date: date,
+          timeSlot: time,
+        },
+      }
+    );
+    res.status(200).json({ status: 200, data: targetBooking, message: _id });
+  } catch (err) {
+    res.status(400).json({ status: 400, message: err.message });
+  } finally {
+    client.close();
+  }
+};
+
+// deletes the booking
+const deleteBooking = async (req, res) => {
+  const { bookingId } = req.params;
+  const client = new MongoClient(MONGO_URI, options);
+
+  try {
+    client.connect();
+    const db = client.db("booking-site");
+    const targetBooking = await db
+      .collection("bookings")
+      .findOne({ _id: bookingId });
+    const { _id } = targetBooking;
+    const deleteBooking = await db
+      .collection("bookings")
+      .deleteOne({ _id: _id });
+
+    if (deleteBooking.deletedCount === 1) {
+      res.status(200).json({
+        status: 200,
+        data: deleteBooking.deletedCount,
+        message: "Booking deleted successfully.",
+      });
+    } else {
+      throw new Error("Booking not found.");
+    }
+  } catch (err) {
+    res.status(404).json({ status: 404, message: err.message });
+  } finally {
+    client.close();
+  }
+};
+
 module.exports = {
   getStylists,
   getStylist,
+  getBookings,
+  getFaq,
   addBooking,
+  getPromocode,
+  updateBooking,
+  deleteBooking,
 };
